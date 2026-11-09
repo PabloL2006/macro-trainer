@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem("macro-theme"); if(t==="light"||t==="dark") document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <style>
 /* Apple-style system: grouped backgrounds, inset cards, SF type, translucent bars, tab bar on phones. */
 :root{
@@ -75,6 +76,10 @@ p{margin:.45em 0}
 .nav-btn.on svg{color:#fff}
 main{min-width:0;padding:36px clamp(16px,4vw,48px) 72px;max-width:1120px;width:100%;margin:0 auto}
 
+.theme-btn{margin-top:auto;display:flex;align-items:center;gap:10px;background:var(--fill-2);border:0;border-radius:12px;padding:9px 12px;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink)}
+.theme-btn:hover{background:var(--fill)}
+.theme-btn svg{width:20px;height:20px;color:var(--accent)}
+.theme-btn small{margin-left:auto;color:var(--muted);font-size:13px}
 /* tab bar + more sheet (phones) */
 .tabbar{display:none}
 .more-bg{position:fixed;inset:0;background:rgba(0,0,0,.32);z-index:60;opacity:0;pointer-events:none;transition:opacity .25s}
@@ -315,6 +320,8 @@ details summary{cursor:pointer;font-weight:500;color:var(--accent)}
   .brand{padding:0} .brand b{font-size:17px;font-weight:600} .brand span{display:none}
   #countdown{margin:0;font-size:12px;padding:5px 10px}
   #nav{display:none}
+  #countdown{margin-left:auto}
+  .theme-btn{margin:0;padding:7px;border-radius:999px} .theme-btn span,.theme-btn small{display:none}
   main{padding:20px 16px calc(var(--tab-h) + 32px + env(safe-area-inset-bottom))}
   .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:50;padding:6px 4px env(safe-area-inset-bottom);background:var(--bar-bg);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--line-2)}
   .tab{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;padding:4px 0 6px;font-size:10.5px;font-weight:500;color:var(--muted);cursor:pointer;letter-spacing:0}
@@ -356,6 +363,7 @@ details summary{cursor:pointer;font-weight:500;color:var(--accent)}
     <div class="brand"><b>Macro Trainer</b><span>Principles of Macroeconomics, SRH Heidelberg</span></div>
     <div id="countdown"></div>
     <nav id="nav" aria-label="Sections"></nav>
+    <button class="theme-btn" id="themeBtn" type="button"></button>
   </aside>
   <main id="main"></main>
 </div>
@@ -1397,6 +1405,10 @@ function tabbarHTML(){
 function moreHTML(){
   return VIEWS.filter(v=>!TABS.some(t=>t[0]===v.id)).map(v=>`<button class="nav-btn${v.id===view?" on":""}" data-go="${v.id}">${ICONS[v.id]||""}<span>${v.label}</span></button>`).join("");
 }
+const THEMES=[["auto","Automatic",'<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17a8.5 8.5 0 0 0 0-17Z" fill="currentColor"/>'],["light","Light",'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>'],["dark","Dark",'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/>']];
+function curTheme(){ try{ const t=localStorage.getItem("macro-theme"); return t==="light"||t==="dark"?t:"auto"; }catch(e){ return document.documentElement.getAttribute("data-theme")||"auto"; } }
+function applyTheme(t){ const r=document.documentElement; if(t==="auto") r.removeAttribute("data-theme"); else r.setAttribute("data-theme",t); try{ if(t==="auto") localStorage.removeItem("macro-theme"); else localStorage.setItem("macro-theme",t); }catch(e){} renderThemeBtn(t); }
+function renderThemeBtn(t=curTheme()){ const x=THEMES.find(y=>y[0]===t); const b=$("#themeBtn"); b.innerHTML=ICON(x[2])+`<span>Appearance</span><small>${x[1]}</small>`; b.setAttribute("aria-label","Appearance: "+x[1]+". Tap to change."); b.title="Appearance: "+x[1]; }
 function setMore(open){ $("#more").classList.toggle("open",open); $("#moreBg").classList.toggle("open",open); }
 function navHTML(){
   return VIEWS.map(v=>`<button class="nav-btn${v.id===view?" on":""}" data-go="${v.id}">${ICONS[v.id]||""}<span>${v.label}</span></button>`).join("");
@@ -1413,6 +1425,8 @@ function render(){
   renderSync();
 }
 $("#moreBg").onclick = ()=>setMore(false);
+$("#themeBtn").onclick = ()=>{ const i=THEMES.findIndex(y=>y[0]===curTheme()); applyTheme(THEMES[(i+1)%3][0]); };
+renderThemeBtn();
 document.addEventListener("keydown", e=>{ if(e.key==="Escape") setMore(false); });
 document.addEventListener("click", e=>{
   const b=e.target.closest("[data-go]"); if(b){ e.preventDefault(); go(b.dataset.go, b.dataset.p||null); }
